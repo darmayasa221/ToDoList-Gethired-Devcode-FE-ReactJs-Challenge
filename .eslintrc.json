@@ -24,7 +24,9 @@
   "plugins": ["react", "@typescript-eslint", "prettier"],
   "rules": {
     "react/function-component-definition": 0,
-    "import/prefer-default-export": 0
+    "import/prefer-default-export": 0,
+    "@typescript-eslint/naming-convention": 0,
+    "react/require-default-props": 0
   },
   "ignorePatterns": "vite.config.ts"
 }

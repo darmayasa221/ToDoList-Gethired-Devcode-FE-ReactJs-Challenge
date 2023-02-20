@@ -16,10 +16,4 @@ export const globalStyle = css({
     padding: 0,
     boxSizing: "border-box",
   },
-  "#modal-root": {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-  },
 });

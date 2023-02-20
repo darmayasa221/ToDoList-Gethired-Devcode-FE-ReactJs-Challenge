@@ -1,23 +1,31 @@
 import styled from "@emotion/styled";
-import React from "react";
-import { headerFontStyle } from "../../../../globalStyle/fonts";
+import React, { useContext, memo } from "react";
+import { fontStyle } from "../../../../globalStyle/fonts";
+import { mq } from "../../../../globalStyle/responsive";
+import ActivityContext from "../../../../store/Activity/activityContext";
 import AddButton from "../../../UI/AddButton";
 
-const HeaderActivityContainer = styled.div({
+const Container = styled.div({
   display: "flex",
   justifyContent: "space-between",
 });
-const TitleActivity = styled.h2(headerFontStyle, {
+const Title = styled.h2(fontStyle, {
   textTransform: "capitalize",
-  fontSize: "36px",
+  fontSize: "16px",
+  fontWeight: 700,
+  color: "#111111",
+  [mq[2] as string]: {
+    fontSize: "36px",
+  },
 });
 const HeaderActivity = () => {
+  const { addActivity } = useContext(ActivityContext);
   return (
-    <HeaderActivityContainer>
-      <TitleActivity data-cy="activity-title">Activity</TitleActivity>
-      <AddButton dataCy="activity-add-button" />
-    </HeaderActivityContainer>
+    <Container>
+      <Title data-cy="activity-title">Activity</Title>
+      <AddButton dataCy="activity-add-button" onClick={addActivity} />
+    </Container>
   );
 };
 
-export default HeaderActivity;
+export default memo(HeaderActivity);

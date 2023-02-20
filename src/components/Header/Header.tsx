@@ -1,36 +1,41 @@
 import styled from "@emotion/styled";
-import React from "react";
-import { headerFontStyle } from "../../globalStyle/fonts";
+import React, { memo } from "react";
+import { fontStyle } from "../../globalStyle/fonts";
 import { mq } from "../../globalStyle/responsive";
 
-const ContainerHeader = styled.header({
+const Container = styled.header({
   backgroundColor: "var(--primary-color)",
-  height: "105px",
+  height: "64px",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "var(--mobile)",
+  padding: "0 20px",
   [mq[2] as string]: {
+    height: "105px",
     padding: "var(--mq-1200)",
   },
 });
-const WrapperHeader = styled.div({
+const Wrapper = styled.div({
   width: "1002px",
 });
-const TextHeader = styled.h1(headerFontStyle, {
-  color: "rgba(255, 255, 255, 1)",
-  fontSize: 24,
+const TextHeader = styled.h1(fontStyle, {
+  color: "#FFFFFF",
+  fontSize: "18px",
+  fontWeight: 700,
   textTransform: "uppercase",
+  [mq[2] as string]: {
+    fontSize: "24px",
+  },
 });
 
 const Header = () => {
   return (
-    <ContainerHeader data-cy="header-background">
-      <WrapperHeader>
+    <Container data-cy="header-background">
+      <Wrapper>
         <TextHeader data-cy="header-title">Todo List App</TextHeader>
-      </WrapperHeader>
-    </ContainerHeader>
+      </Wrapper>
+    </Container>
   );
 };
 
-export default Header;
+export default memo(Header);

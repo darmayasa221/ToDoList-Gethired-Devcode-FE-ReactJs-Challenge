@@ -1,6 +1,6 @@
 import { css } from "@emotion/react";
 
-export const headerFontStyle = css({
+export const fontStyle = css({
   fontFamily: "Poppins, sans-serif",
   fontStyle: "normal",
 });

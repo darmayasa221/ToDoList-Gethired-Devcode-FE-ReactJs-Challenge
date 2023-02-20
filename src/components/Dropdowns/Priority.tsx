@@ -4,12 +4,18 @@ import { dataPriority } from "./dataPriorty";
 import { ReactComponent as ChevronDownSvg } from "../../assets/svg/tabler_chevron-down.svg";
 import { ReactComponent as ChevronUpSvg } from "../../assets/svg/tabler_chevron-up.svg";
 import { ReactComponent as CheckSvg } from "../../assets/svg/tabler_check.svg";
-import { headerFontStyle } from "../../globalStyle/fonts";
+import { fontStyle } from "../../globalStyle/fonts";
 import { mq } from "../../globalStyle/responsive";
 
 type TypeItemPriority = {
   color: string;
   title: string;
+  index: number;
+  selectedItem: number;
+  getItemIndex: (index: number) => void;
+};
+type TypePriority = {
+  onChange: (priority: string) => void;
 };
 const WrapperPriority = styled.button({
   padding: "14px",
@@ -18,21 +24,23 @@ const WrapperPriority = styled.button({
   height: "52px",
   border: "1px solid #E5E5E5",
   background: "#F4F4F4",
-  cursor: "pointer",
   [mq[1] as string]: {
     width: "205px",
   },
 });
 const SelectItem = styled.div({
+  cursor: "pointer",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
 });
-const TitleDefaultItem = styled.p(headerFontStyle, {
+const TitleDefaultItem = styled.p(fontStyle, {
   fontSize: "14px",
-  fontStyle: "normal",
   fontWeight: 400,
   color: "#111111",
+  [mq[2] as string]: {
+    fontSize: "16px",
+  },
 });
 const ContainerList = styled.div({
   borderTop: "1px solid #E5E5E5",
@@ -48,7 +56,8 @@ const ContainerList = styled.div({
     width: "205px",
   },
 });
-const WrapperList = styled.div({
+const WrapperItem = styled.div({
+  cursor: "pointer",
   padding: "14px",
   display: "flex",
   justifyContent: "space-between",
@@ -70,26 +79,44 @@ const Indicator = styled.div<{ indicatorColor: string }>(
     background: indicatorColor,
   }),
 );
-const TitleItem = styled.p(headerFontStyle, {
+const TitleItem = styled.p(fontStyle, {
+  fontWeight: 400,
   fontSize: "14px",
   color: "#4A4A4A",
+  [mq[2] as string]: {
+    fontSize: "16px",
+  },
 });
 const WrapperRightSide = styled.div({});
-const ItemPriority: FC<TypeItemPriority> = ({ color, title }) => {
+const ItemPriority: FC<TypeItemPriority> = ({
+  getItemIndex,
+  color,
+  title,
+  index,
+  selectedItem,
+}) => {
+  const onHandlerPriority = () => {
+    getItemIndex(index);
+  };
   return (
-    <WrapperList>
+    <WrapperItem onClick={onHandlerPriority}>
       <WrapperLeftSide>
         <Indicator indicatorColor={color} />
         <TitleItem>{title}</TitleItem>
       </WrapperLeftSide>
       <WrapperRightSide>
-        <CheckSvg />
+        {selectedItem === index && <CheckSvg />}
       </WrapperRightSide>
-    </WrapperList>
+    </WrapperItem>
   );
 };
-const Priority = () => {
+const Priority: FC<TypePriority> = ({ onChange }) => {
   const [klick, setKlick] = useState<boolean>(false);
+  const [itemIndex, setItemIndex] = useState<number | undefined>();
+  const onHandlerItemIndex = (index: number) => {
+    setItemIndex(index);
+    onChange(dataPriority[index].priority);
+  };
   return (
     <WrapperPriority
       type="button"
@@ -98,13 +125,27 @@ const Priority = () => {
       }}
     >
       <SelectItem>
-        <TitleDefaultItem>Pilih Priority</TitleDefaultItem>
+        {typeof itemIndex === "undefined" ? (
+          <TitleDefaultItem>Pilih Priority</TitleDefaultItem>
+        ) : (
+          <WrapperLeftSide>
+            <Indicator indicatorColor={dataPriority[itemIndex].color} />
+            <TitleItem>{dataPriority[itemIndex].title}</TitleItem>
+          </WrapperLeftSide>
+        )}
         {klick ? <ChevronUpSvg /> : <ChevronDownSvg />}
       </SelectItem>
       {klick && (
         <ContainerList>
-          {dataPriority.map(({ color, title }) => (
-            <ItemPriority color={color} title={title} key={color} />
+          {dataPriority.map(({ color, title }, index) => (
+            <ItemPriority
+              selectedItem={itemIndex as number}
+              getItemIndex={onHandlerItemIndex}
+              color={color}
+              title={title}
+              key={color}
+              index={index}
+            />
           ))}
         </ContainerList>
       )}

@@ -1,73 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "@emotion/styled";
+import { Outlet, useParams } from "react-router-dom";
 import { mq } from "../../globalStyle/responsive";
-import HeaderActivity from "./Dashboard/Header/HeaderActivity";
-import { EmptyActivity } from "./Dashboard/Main/Activity/EmptyActivity";
-import Activity from "./Dashboard/Main/Activity/Activity";
-import HeaderDetailActivity from "./Dashboard/Header/HeaderDetailActivity";
-import DetailActivity from "./Dashboard/Main/DetailActivity/DetailActivity";
 
-const ContainerMain = styled.main({
-  paddingTop: "43px !important",
-  padding: "var(--mobile)",
-  [mq[0] as string]: {
-    display: "flex",
-    alignItems: "center",
-    flexDirection: "column",
-  },
+const Container = styled.main<{ param: boolean }>(({ param }) => ({
+  padding: "28px 1.3rem",
+  display: "flex",
+  alignItems: param ? "unset" : "center",
+  flexDirection: param ? "unset" : "column",
+  justifyContent: param ? "center" : "unset",
   [mq[2] as string]: {
+    paddingTop: "49px !important",
     padding: "var(--mq-1200)",
   },
-});
-const WrapperMain = styled.div({
+}));
+const Wrapper = styled.div<{ param: boolean }>(({ param }) => ({
   maxWidth: "1002px",
-});
-const Activitys = styled.div({
-  paddingTop: "49px",
-  display: "grid",
-  gridAutoRows: "234px",
-  columnGap: "20px",
-  rowGap: "26px",
-  [mq[0] as string]: {
-    gridTemplateColumns: "repeat(2, 235px)",
-  },
-  [mq[1] as string]: {
-    gridTemplateColumns: "repeat(3, 235px)",
-  },
-  [mq[3] as string]: {
-    gridTemplateColumns: "repeat(4, 235px)",
-  },
-});
-const DetailActivitys = styled.div({
-  display: "flex",
-  flexDirection: "column",
-  paddingTop: "49px",
-  rowGap: "10px",
-});
+  width: param ? "1002px" : "unset",
+}));
+
 const Main = () => {
+  const params = useParams();
+  const [param, setParam] = useState<boolean>(false);
+  useEffect(() => {
+    setParam(Object.keys(params)[0] === "id");
+  }, [params]);
   return (
-    <ContainerMain>
-      <WrapperMain>
-        <HeaderDetailActivity />
-        {/* <HeaderActivity /> */}
-        {/* <EmptyActivity /> */}
-        {/* <Activitys>
-          <Activity />
-          <Activity />
-          <Activity />
-          <Activity />
-          <Activity />
-          <Activity />
-        </Activitys> */}
-        <DetailActivitys>
-          <DetailActivity />
-          <DetailActivity />
-          <DetailActivity />
-          <DetailActivity />
-          <DetailActivity />
-        </DetailActivitys>
-      </WrapperMain>
-    </ContainerMain>
+    <Container param={param}>
+      <Wrapper param={param}>
+        <Outlet />
+      </Wrapper>
+    </Container>
   );
 };
 
