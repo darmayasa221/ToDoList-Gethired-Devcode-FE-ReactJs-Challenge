@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React, { FC } from "react";
+import React, { FC, memo } from "react";
 import { card } from "../../globalStyle/card";
 import { ReactComponent as DeleteSvg } from "../../assets/svg/modal-delete-icon.svg";
 import { fontStyle } from "../../globalStyle/fonts";
@@ -59,6 +59,7 @@ const ConfirmAlert: FC<TypeConfirmAlert> = ({
     <Wrapper data-cy="modal-delete">
       <Header>
         <DeleteSvg
+          data-cy="modal-delete-icon"
           css={{
             width: "62px",
             height: "62px",
@@ -70,7 +71,7 @@ const ConfirmAlert: FC<TypeConfirmAlert> = ({
         />
       </Header>
       <Body>
-        <Description>
+        <Description data-cy="modal-delete-title">
           Apakah anda yakin menghapus {fromItem} &nbsp;
           <b>
             <q>{itemTitle}</q>?
@@ -79,12 +80,16 @@ const ConfirmAlert: FC<TypeConfirmAlert> = ({
       </Body>
       <Footer>
         <RegularButton
+          dataCy="modal-delete-cancel-button"
+          type="button"
           backgroundColor="#F4F4F4"
           onClick={onBack}
           text="Batal"
           textColor="#4A4A4A"
         />
         <RegularButton
+          dataCy="modal-delete-confirm-button"
+          type="button"
           backgroundColor="#ED4C5C"
           onClick={onConfirm}
           text="Hapus"
@@ -95,4 +100,4 @@ const ConfirmAlert: FC<TypeConfirmAlert> = ({
   );
 };
 
-export default ConfirmAlert;
+export default memo(ConfirmAlert);

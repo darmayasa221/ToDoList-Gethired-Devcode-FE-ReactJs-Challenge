@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React from "react";
+import React, { FC, memo, useCallback } from "react";
 import { ReactComponent as LatestSvg } from "../../assets/svg/sort-selection-latest.svg";
 import { ReactComponent as OldestSvg } from "../../assets/svg/sort-selection-oldest.svg";
 import { ReactComponent as AzSvg } from "../../assets/svg/sort-selection-az.svg";
@@ -9,11 +9,16 @@ import { ReactComponent as CheckSvg } from "../../assets/svg/tabler_check.svg";
 import { card } from "../../globalStyle/card";
 import { fontStyle } from "../../globalStyle/fonts";
 import { mq } from "../../globalStyle/responsive";
+import { TypeSorted } from "../../commons/sorter";
 
+type TypeSort = {
+  sortIsVisibleHandler: () => void;
+  onClick: (itemSelected: TypeSorted) => void;
+  itemSelected: TypeSorted;
+};
 const ContainerSort = styled.div(card, {
   position: "absolute",
   top: "2.5rem",
-  // right: "3rem",
   width: "187px",
   height: "207px",
   border: "1px solid #E5E5E5",
@@ -59,66 +64,90 @@ const dataSVG = [
   {
     elemet: <LatestSvg />,
     title: "Terbaru",
-    isSelected: false,
+    type: "latest",
   },
   {
     elemet: <OldestSvg />,
     title: "Terlama",
-    isSelected: false,
+    type: "oldest",
   },
   {
     elemet: <AzSvg />,
     title: "A-Z",
-    isSelected: false,
+    type: "az",
   },
   {
     elemet: <ZaSvg />,
     title: "Z-A",
-    isSelected: false,
+    type: "za",
   },
   {
     elemet: <NotFinishedSvg />,
     title: "Belum Selesai",
-    isSelected: false,
+    type: "unfinished",
   },
 ];
-const Sort = () => {
+const Sort: FC<TypeSort> = ({
+  onClick,
+  sortIsVisibleHandler,
+  itemSelected,
+}) => {
+  const selectSortedHandler = useCallback(
+    (select: TypeSorted) => {
+      onClick(select);
+      sortIsVisibleHandler();
+    },
+    [onClick, sortIsVisibleHandler],
+  );
   return (
-    <ContainerSort>
-      {dataSVG.map(({ elemet, title, isSelected }, index) =>
+    <ContainerSort data-cy="sort-parent">
+      {dataSVG.map(({ elemet, title, type }, index) =>
         index === dataSVG.length - 1 ? (
-          <WrapperItem style={{ border: "none" }} key={title}>
+          <WrapperItem
+            data-cy={`sort-${type}`}
+            onClick={() => selectSortedHandler(title as TypeSorted)}
+            style={{ border: "none" }}
+            key={title}
+          >
             <WrapperLeftSide>
               {elemet}
               <Title>{title}</Title>
             </WrapperLeftSide>
-            <CheckSvg
-              css={{
-                width: "14px",
-                height: "14px",
-                [mq[0] as string]: {
-                  width: "18px",
-                  height: "18px",
-                },
-              }}
-            />
+            {title === itemSelected && (
+              <CheckSvg
+                css={{
+                  width: "14px",
+                  height: "14px",
+                  [mq[0] as string]: {
+                    width: "18px",
+                    height: "18px",
+                  },
+                }}
+              />
+            )}
           </WrapperItem>
         ) : (
-          <WrapperItem key={title}>
+          <WrapperItem
+            data-cy={`sort-${type}`}
+            onClick={() => selectSortedHandler(title as TypeSorted)}
+            key={title}
+          >
             <WrapperLeftSide>
               {elemet}
               <Title>{title}</Title>
             </WrapperLeftSide>
-            <CheckSvg
-              css={{
-                width: "14px",
-                height: "14px",
-                [mq[0] as string]: {
-                  width: "18px",
-                  height: "18px",
-                },
-              }}
-            />
+            {title === itemSelected && (
+              <CheckSvg
+                css={{
+                  width: "14px",
+                  height: "14px",
+                  [mq[0] as string]: {
+                    width: "18px",
+                    height: "18px",
+                  },
+                }}
+              />
+            )}
           </WrapperItem>
         ),
       )}
@@ -126,4 +155,4 @@ const Sort = () => {
   );
 };
 
-export default Sort;
+export default memo(Sort);

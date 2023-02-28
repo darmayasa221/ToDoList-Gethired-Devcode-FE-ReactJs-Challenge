@@ -1,5 +1,14 @@
 import styled from "@emotion/styled";
-import React, { ChangeEvent, FC, FormEvent, useContext, useState } from "react";
+import React, {
+  ChangeEvent,
+  FC,
+  FormEvent,
+  memo,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { card } from "../../../globalStyle/card";
 import { fontStyle } from "../../../globalStyle/fonts";
 import { ReactComponent as CloseSvg } from "../../../assets/svg/modal-add-close-button.svg";
@@ -7,16 +16,15 @@ import Priority from "../../Dropdowns/Priority";
 import { mq } from "../../../globalStyle/responsive";
 import RegularButton from "../../UI/RegularButton";
 import DetailActivityContext from "../../../store/DetailActivity/detailActivityContext";
+import { TypeFormData } from "../../../types/Form/formType";
+import { TypeDetailActivityEdited } from "../../../types/DetailActivity/detailActivityType";
 
 type TypeFormDetailActivity = {
   formTitle: string;
   formType: "add" | "edit";
-  onHandlerClose: () => void;
-  edited?: {
-    title: string;
-    priority: string;
-    idDetailActivity: number;
-  };
+  closeHandler: () => void;
+  activityGroupId?: number;
+  edited?: TypeDetailActivityEdited;
 };
 const Form = styled.form(card, {
   position: "fixed",
@@ -92,57 +100,101 @@ const Footer = styled.div({
 const FormDetailActivity: FC<TypeFormDetailActivity> = ({
   formTitle,
   formType,
+  activityGroupId,
   edited,
-  onHandlerClose,
+  closeHandler,
 }) => {
-  const [isDiabled, setIsDisabled] = useState<boolean>(true);
-  const [data, setData] = useState<{ title: string; priority: string }>({
-    title: edited?.title || "",
-    priority: edited?.priority || "",
-  });
+  const activityGroupIdMemo = useMemo(() => activityGroupId, [activityGroupId]);
+  const editedMemo = useMemo(() => edited, [edited]);
   const { addDetailActivity, editDetailActivity } = useContext(
     DetailActivityContext,
   );
-  const priorityValue = (priority: string) => {
+  const [isDisabled, setIsDisabled] = useState<boolean>(true);
+  const [data, setData] = useState<TypeFormData>({
+    title: editedMemo?.title || "",
+    priority: editedMemo?.priority || "",
+  });
+  const dataMemo = useMemo(() => data, [data]);
+  const priorityValue = useCallback((priority: string) => {
     setData((prev) => ({ ...prev, priority }));
-  };
-  const onChangeTitle = (event: ChangeEvent<HTMLInputElement>) => {
-    const isInput = event.target.value.trim().length === 0;
-    setIsDisabled(isInput);
-    setData((prev) => ({ ...prev, title: event.target.value }));
-  };
-  const onHandlerSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (formType === "add") {
-      await addDetailActivity(data);
-    } else {
-      await editDetailActivity(data, edited?.idDetailActivity);
-    }
-    onHandlerClose();
-  };
+  }, []);
+  const disableButton = useCallback((input: string) => {
+    const isInput = input.trim().length === 0;
+    setIsDisabled(() => isInput);
+  }, []);
+  const onFocusHandler = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      disableButton(event.target.value);
+    },
+    [disableButton],
+  );
+  const onChangeTitle = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      disableButton(event.target.value);
+      setData((prev) => ({ ...prev, title: event.target.value }));
+    },
+    [disableButton],
+  );
+  const onHandlerSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (formType === "add") {
+        await addDetailActivity({
+          ...dataMemo,
+          activity_group_id: activityGroupIdMemo as number,
+        });
+      } else {
+        await editDetailActivity({ ...dataMemo, id: editedMemo?.id as number });
+      }
+      closeHandler();
+    },
+    [
+      addDetailActivity,
+      editDetailActivity,
+      closeHandler,
+      dataMemo,
+      editedMemo?.id,
+      activityGroupIdMemo,
+      formType,
+    ],
+  );
+
   return (
-    <Form onSubmit={onHandlerSubmit}>
+    <Form data-cy="modal-add" onSubmit={onHandlerSubmit}>
       <Header>
-        <Title>{formTitle}</Title>
-        <CloseButton type="button" onClick={onHandlerClose}>
+        <Title data-cy="modal-add-title">{formTitle}</Title>
+        <CloseButton
+          data-cy="modal-add-close-button"
+          type="button"
+          onClick={closeHandler}
+        >
           <CloseSvg />
         </CloseButton>
       </Header>
       <Body>
-        <Label htmlFor="title">Nama ListItem</Label>
+        <Label data-cy="modal-add-name-title" htmlFor="title">
+          Nama ListItem
+        </Label>
         <Input
+          data-cy="modal-add-name-input"
+          onFocus={onFocusHandler}
+          autoFocus
+          value={dataMemo.title}
           onChange={onChangeTitle}
           type="tex"
           id="title"
           placeholder="Tambahkan nama list item"
         />
-        <Label htmlFor="title">Priority</Label>
-        <Priority onChange={priorityValue} />
+        <Label data-cy="modal-add-priority-title" htmlFor="priority">
+          Priority
+        </Label>
+        <Priority priorityEdited={dataMemo.priority} onChange={priorityValue} />
       </Body>
       <Footer>
         <RegularButton
+          dataCy="modal-add-save-button"
           type="submit"
-          disabled={isDiabled}
+          disabled={isDisabled}
           backgroundColor="#16ABF8"
           text="Simpan"
           textColor="white"
@@ -152,4 +204,4 @@ const FormDetailActivity: FC<TypeFormDetailActivity> = ({
   );
 };
 
-export default FormDetailActivity;
+export default memo(FormDetailActivity);

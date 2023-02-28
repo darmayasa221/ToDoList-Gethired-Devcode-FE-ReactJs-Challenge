@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React, { memo } from "react";
+import React from "react";
 import { fontStyle } from "../../globalStyle/fonts";
 import { mq } from "../../globalStyle/responsive";
 
@@ -38,4 +38,4 @@ const Header = () => {
   );
 };
 
-export default memo(Header);
+export default Header;

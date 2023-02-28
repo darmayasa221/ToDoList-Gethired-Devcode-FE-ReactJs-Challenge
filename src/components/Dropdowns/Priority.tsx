@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React, { FC, useState } from "react";
+import React, { FC, memo, useCallback, useMemo, useState } from "react";
 import { dataPriority } from "./dataPriorty";
 import { ReactComponent as ChevronDownSvg } from "../../assets/svg/tabler_chevron-down.svg";
 import { ReactComponent as ChevronUpSvg } from "../../assets/svg/tabler_chevron-up.svg";
@@ -16,6 +16,7 @@ type TypeItemPriority = {
 };
 type TypePriority = {
   onChange: (priority: string) => void;
+  priorityEdited: string | undefined;
 };
 const WrapperPriority = styled.button({
   padding: "14px",
@@ -95,11 +96,12 @@ const ItemPriority: FC<TypeItemPriority> = ({
   index,
   selectedItem,
 }) => {
-  const onHandlerPriority = () => {
-    getItemIndex(index);
-  };
+  const onHandlerPriority = useCallback(
+    () => getItemIndex(index),
+    [index, getItemIndex],
+  );
   return (
-    <WrapperItem onClick={onHandlerPriority}>
+    <WrapperItem data-cy="modal-add-priority-item" onClick={onHandlerPriority}>
       <WrapperLeftSide>
         <Indicator indicatorColor={color} />
         <TitleItem>{title}</TitleItem>
@@ -110,25 +112,36 @@ const ItemPriority: FC<TypeItemPriority> = ({
     </WrapperItem>
   );
 };
-const Priority: FC<TypePriority> = ({ onChange }) => {
+const Priority: FC<TypePriority> = ({ onChange, priorityEdited }) => {
+  const priorityIndex = useMemo(() => {
+    return dataPriority.findIndex(
+      ({ priority }) => priority === priorityEdited,
+    );
+  }, [priorityEdited]);
   const [klick, setKlick] = useState<boolean>(false);
-  const [itemIndex, setItemIndex] = useState<number | undefined>();
-  const onHandlerItemIndex = (index: number) => {
-    setItemIndex(index);
-    onChange(dataPriority[index].priority);
-  };
+  const [itemIndex, setItemIndex] = useState<number | undefined>(priorityIndex);
+  const onHandlerItemIndex = useCallback(
+    (index: number) => {
+      setItemIndex(() => index);
+      onChange(dataPriority[index].priority);
+    },
+    [onChange],
+  );
   return (
     <WrapperPriority
+      data-cy="modal-add-priority-dropdown"
       type="button"
       onClick={() => {
         setKlick(!klick);
       }}
     >
       <SelectItem>
-        {typeof itemIndex === "undefined" ? (
-          <TitleDefaultItem>Pilih Priority</TitleDefaultItem>
+        {typeof itemIndex === "undefined" || itemIndex === -1 ? (
+          <TitleDefaultItem data-cy="modal-add-priority-item">
+            Pilih Priority
+          </TitleDefaultItem>
         ) : (
-          <WrapperLeftSide>
+          <WrapperLeftSide data-cy="modal-add-priority-item">
             <Indicator indicatorColor={dataPriority[itemIndex].color} />
             <TitleItem>{dataPriority[itemIndex].title}</TitleItem>
           </WrapperLeftSide>
@@ -153,4 +166,4 @@ const Priority: FC<TypePriority> = ({ onChange }) => {
   );
 };
 
-export default Priority;
+export default memo(Priority);

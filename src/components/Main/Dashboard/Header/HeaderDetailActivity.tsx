@@ -1,5 +1,13 @@
 import styled from "@emotion/styled";
-import React, { ChangeEvent, FC, useContext, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  FC,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { ReactComponent as BackButtonSvg } from "../../../../assets/svg/todo-back-button.svg";
 import { ReactComponent as EditButtonSvg } from "../../../../assets/svg/todo-title-edit-button.svg";
@@ -8,12 +16,19 @@ import { fontStyle } from "../../../../globalStyle/fonts";
 import { mq } from "../../../../globalStyle/responsive";
 import AddButton from "../../../UI/AddButton";
 import Sort from "../../../Collapse/Sort";
-import ActivityContext from "../../../../store/Activity/activityContext";
+import {
+  TypeSelectActivityItem,
+  TypePatchActivity,
+} from "../../../../types/Activitys/activitysType";
+import { TypeSorted } from "../../../../commons/sorter";
 
 type TypeHeaderDetailActivity = {
-  onHandlerAddButton: () => void;
+  sortedType: TypeSorted;
+  data: TypeSelectActivityItem;
+  addDetailActivityItem: () => void;
+  patchActivity: (data: TypePatchActivity) => Promise<void>;
+  sortedItemHandler: (select: TypeSorted) => void;
 };
-
 const Container = styled.div({
   display: "flex",
   flexDirection: "column",
@@ -71,6 +86,7 @@ const SortButton = styled.button({
   cursor: "pointer",
 });
 const BackButton = styled.button({
+  zIndex: 20,
   background: "none",
   border: "none",
   cursor: "pointer",
@@ -88,39 +104,58 @@ const InputTitle = styled.input(fontStyle, {
   fontWeight: 600,
   color: "#111111",
   background: "none",
+  width: "100%",
   ":focus": {
-    borderBottom: "1px solid #111111",
+    paddingLeft: "11px",
   },
   [mq[2] as string]: {
     fontWeight: 700,
     fontSize: "36px",
+    ":focus": {
+      borderBottom: "1px solid #111111",
+    },
   },
 });
 const HeaderDetailActivity: FC<TypeHeaderDetailActivity> = ({
-  onHandlerAddButton,
+  sortedType,
+  data,
+  addDetailActivityItem,
+  patchActivity,
+  sortedItemHandler,
 }) => {
-  const { updateActivity, activity } = useContext(ActivityContext);
+  const navigate = useNavigate();
+  const dataMemo = useMemo(() => data, [data]);
   const [activityTitle, setActivityTitle] = useState<string>("");
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [isSortVisible, setIsSortVisible] = useState<boolean>(false);
-  const navigate = useNavigate();
-  const onChangeTitle = (event: ChangeEvent<HTMLInputElement>) => {
-    setActivityTitle(event.target.value);
-  };
-  const onBlurInputTitle = async () => {
-    setIsEdit(false);
-    await updateActivity({ title: activityTitle, activityId: activity.id });
-  };
+  const onChangeTitle = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      if (isEdit) setActivityTitle(() => event.target.value);
+    },
+    [isEdit],
+  );
+  const onBlurInputTitle = useCallback(async () => {
+    if (isEdit) setIsEdit(() => false);
+    await patchActivity({ title: activityTitle, id: dataMemo.id });
+  }, [isEdit, dataMemo.id, activityTitle, patchActivity]);
+  const handlerEditOn = useCallback(() => {
+    setIsEdit((prev) => !prev);
+  }, []);
+  const sortIsVisibleHandler = useCallback(
+    () => setIsSortVisible((prev) => !prev),
+    [],
+  );
   useEffect(() => {
-    setActivityTitle(activity.title);
-    return () => {
-      setActivityTitle("");
-    };
-  }, [activity]);
+    setActivityTitle(() => dataMemo.title);
+  }, [dataMemo.title]);
   return (
     <Container>
       <WrapperLeftSide>
-        <BackButton type="button" onClick={() => navigate("/")}>
+        <BackButton
+          data-cy="todo-back-button"
+          type="button"
+          onClick={() => navigate("/")}
+        >
           <BackButtonSvg
             css={{
               zIndex: 4,
@@ -135,7 +170,9 @@ const HeaderDetailActivity: FC<TypeHeaderDetailActivity> = ({
           />
         </BackButton>
         {!isEdit ? (
-          <Title onClick={() => setIsEdit(true)}>{activityTitle}</Title>
+          <Title data-cy="todo-title" onClick={handlerEditOn}>
+            {activityTitle}
+          </Title>
         ) : (
           <InputTitle
             type="text"
@@ -145,7 +182,11 @@ const HeaderDetailActivity: FC<TypeHeaderDetailActivity> = ({
             autoFocus
           />
         )}
-        <EditButton type="button" onClick={() => setIsEdit(!isEdit)}>
+        <EditButton
+          data-cy="todo-title-edit-button"
+          type="button"
+          onClick={handlerEditOn}
+        >
           <EditButtonSvg
             css={{
               cursor: "pointer",
@@ -161,8 +202,9 @@ const HeaderDetailActivity: FC<TypeHeaderDetailActivity> = ({
       </WrapperLeftSide>
       <WrapperRightSide>
         <SortButton
+          data-cy="todo-sort-button"
           type="button"
-          onClick={() => setIsSortVisible(!isSortVisible)}
+          onClick={sortIsVisibleHandler}
         >
           <SortButtonSvg
             css={{
@@ -176,11 +218,17 @@ const HeaderDetailActivity: FC<TypeHeaderDetailActivity> = ({
             }}
           />
         </SortButton>
-        {isSortVisible && <Sort />}
-        <AddButton onClick={onHandlerAddButton} dataCy="todo-add-button" />
+        {isSortVisible && (
+          <Sort
+            sortIsVisibleHandler={sortIsVisibleHandler}
+            onClick={sortedItemHandler}
+            itemSelected={sortedType}
+          />
+        )}
+        <AddButton onClick={addDetailActivityItem} dataCy="todo-add-button" />
       </WrapperRightSide>
     </Container>
   );
 };
 
-export default HeaderDetailActivity;
+export default memo(HeaderDetailActivity);

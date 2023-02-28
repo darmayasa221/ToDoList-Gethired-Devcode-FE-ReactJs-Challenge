@@ -1,17 +1,18 @@
 import styled from "@emotion/styled";
-import React, { FC, useContext } from "react";
+import React, { FC, memo, useMemo } from "react";
 import { Link } from "react-router-dom";
-
 import { ReactComponent as TrashSvg } from "../../../../../assets/svg/tabler_trash.svg";
 import dateFormater from "../../../../../commons/dateFormater";
 import { card } from "../../../../../globalStyle/card";
 import { fontStyle } from "../../../../../globalStyle/fonts";
 import { mq } from "../../../../../globalStyle/responsive";
-import ModalContext from "../../../../../store/Modal/modalContext";
-import { TypeActivity } from "../../../../../types/Activitys/activitysType";
+import {
+  TypeActivity,
+  TypeSelectActivityItem,
+} from "../../../../../types/Activitys/activitysType";
 
 type TypeActivityItem = TypeActivity & {
-  onDeleteActivityItem: (id: number, title: string) => void;
+  onClick: (data: TypeSelectActivityItem) => void;
 };
 const CardActivity = styled.div(card, {
   display: "flex",
@@ -60,13 +61,20 @@ const ActivityItem: FC<TypeActivityItem> = ({
   created_at,
   id,
   title,
-  onDeleteActivityItem,
+  onClick,
 }) => {
   const dateID = dateFormater(created_at);
-  const { setModalOn } = useContext(ModalContext);
+  const activity: TypeSelectActivityItem = useMemo(
+    () => ({ id, title }),
+    [id, title],
+  );
   return (
     <CardActivity data-cy="activity-item">
-      <Header data-cy="activity-item-title" to={`detail/${id}`}>
+      <Header
+        data-cy="activity-item-title"
+        to={`detail/${id}`}
+        state={activity}
+      >
         {title}
       </Header>
       <Body>
@@ -74,8 +82,7 @@ const ActivityItem: FC<TypeActivityItem> = ({
         <RemoveButton
           data-cy="activity-item-delete-button"
           onClick={() => {
-            setModalOn();
-            onDeleteActivityItem(id, title);
+            onClick({ id, title });
           }}
         >
           <TrashSvg
@@ -94,4 +101,4 @@ const ActivityItem: FC<TypeActivityItem> = ({
   );
 };
 
-export default ActivityItem;
+export default memo(ActivityItem);

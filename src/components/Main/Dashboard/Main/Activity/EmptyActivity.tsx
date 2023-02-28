@@ -1,8 +1,7 @@
 import styled from "@emotion/styled";
-import React, { useContext } from "react";
+import React, { FC, memo } from "react";
 import { ReactComponent as EmptyActivitySvg } from "../../../../../assets/svg/activity-empty-state.svg";
 import { mq } from "../../../../../globalStyle/responsive";
-import ActivityContext from "../../../../../store/Activity/activityContext";
 
 const Wrapper = styled.div({
   cursor: "pointer",
@@ -10,10 +9,9 @@ const Wrapper = styled.div({
   justifyContent: "center",
   paddingTop: "59px",
 });
-export const EmptyActivity = () => {
-  const { addActivity } = useContext(ActivityContext);
+const EmptyActivity: FC<{ onClick: () => Promise<void> }> = ({ onClick }) => {
   return (
-    <Wrapper onClick={addActivity} data-cy="activity-empty-state">
+    <Wrapper onClick={onClick} data-cy="activity-empty-state">
       <EmptyActivitySvg
         css={{
           width: "319px",
@@ -27,3 +25,5 @@ export const EmptyActivity = () => {
     </Wrapper>
   );
 };
+
+export default memo(EmptyActivity);

@@ -1,8 +1,7 @@
 import styled from "@emotion/styled";
-import React, { useContext } from "react";
+import React, { FC, memo } from "react";
 import { ReactComponent as EmptyDetailActivitySvg } from "../../../../../assets/svg/todo-empty-state.svg";
 import { mq } from "../../../../../globalStyle/responsive";
-import DetailActivityContext from "../../../../../store/DetailActivity/detailActivityContext";
 
 const WrapperEmptyDetailActivity = styled.div({
   cursor: "pointer",
@@ -10,10 +9,9 @@ const WrapperEmptyDetailActivity = styled.div({
   justifyContent: "center",
   paddingTop: "80px",
 });
-const EmptyDetailActivity = () => {
-  const { addDetailActivityDefaultValue } = useContext(DetailActivityContext);
+const EmptyDetailActivity: FC<{ onClick: () => void }> = ({ onClick }) => {
   return (
-    <WrapperEmptyDetailActivity onClick={addDetailActivityDefaultValue}>
+    <WrapperEmptyDetailActivity data-cy="todo-empty-state" onClick={onClick}>
       <EmptyDetailActivitySvg
         css={{
           width: "320px",
@@ -28,4 +26,4 @@ const EmptyDetailActivity = () => {
   );
 };
 
-export default EmptyDetailActivity;
+export default memo(EmptyDetailActivity);

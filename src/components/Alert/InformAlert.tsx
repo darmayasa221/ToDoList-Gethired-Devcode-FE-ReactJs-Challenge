@@ -1,7 +1,8 @@
 import styled from "@emotion/styled";
-import React, { FC } from "react";
+import React, { FC, memo } from "react";
 import { ReactComponent as InformationSvg } from "../../assets/svg/modal-information-icon.svg";
 import { card } from "../../globalStyle/card";
+import { fontStyle } from "../../globalStyle/fonts";
 import { mq } from "../../globalStyle/responsive";
 
 type TypeInformAlert = {
@@ -20,14 +21,19 @@ const WrapperInformAlert = styled.div(card, {
     width: "490px",
   },
 });
-const Description = styled.p({});
+const Description = styled.p(fontStyle, {
+  fontSize: "14px",
+  fontWeight: 500,
+});
 const InformAlert: FC<TypeInformAlert> = ({ fromItem }) => {
   return (
-    <WrapperInformAlert>
-      <InformationSvg />
-      <Description>{fromItem} berhasil dihapus</Description>
+    <WrapperInformAlert data-cy="modal-information">
+      <InformationSvg data-cy="modal-information-icon" />
+      <Description data-cy="modal-information-title">
+        {fromItem} berhasil dihapus
+      </Description>
     </WrapperInformAlert>
   );
 };
 
-export default InformAlert;
+export default memo(InformAlert);

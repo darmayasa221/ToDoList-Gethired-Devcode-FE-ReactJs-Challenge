@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
-import React, { useContext, useState } from "react";
+import React, { memo, useCallback, useContext, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import sorter, { TypeSorted } from "../../commons/sorter";
 import ConfirmAlert from "../../components/Alert/ConfirmAlert";
 import InformAlert from "../../components/Alert/InformAlert";
 import FormDetailActivity from "../../components/Form/DetailActivity/FormDetailActivity";
@@ -10,6 +12,8 @@ import Modal from "../../components/Modal/Modal";
 import { mq } from "../../globalStyle/responsive";
 import DetailActivityContext from "../../store/DetailActivity/detailActivityContext";
 import ModalContext from "../../store/Modal/modalContext";
+import { TypeSelectActivityItem } from "../../types/Activitys/activitysType";
+import { TypeDetailActivityEdited } from "../../types/DetailActivity/detailActivityType";
 
 const DetailActivitys = styled.div({
   display: "flex",
@@ -22,9 +26,23 @@ const DetailActivitys = styled.div({
 });
 
 const DetailActivity = () => {
-  const { detailActivitys, deleteDetailActivity } = useContext(
-    DetailActivityContext,
+  const { state }: { state: TypeSelectActivityItem } = useLocation();
+  const selectedActivityMemo: TypeSelectActivityItem = useMemo(
+    () => state,
+    [state],
   );
+  const {
+    patchDetailActivity,
+    patchActivity,
+    deleteDetailActivity,
+    detailActivitys,
+  } = useContext(DetailActivityContext);
+
+  const [sortedType, setSortedType] = useState<TypeSorted>("Terbaru");
+  const detailActivitysMemo = useMemo(() => {
+    console.log("detail activity memo value");
+    return sorter(detailActivitys, sortedType);
+  }, [detailActivitys, sortedType]);
   const {
     isModalVisible,
     isModalChangeChildrenElement,
@@ -33,108 +51,127 @@ const DetailActivity = () => {
     setModalChangeChildrenElementOff,
     setModalChangeChildrenElementOn,
   } = useContext(ModalContext);
-  const [isAddButtonClick, setIsAddButtonClick] = useState<boolean>(false);
-  const [isDeleteButtonClick, setIsDeleteButtonClick] =
+  const [detailActivityItem, setDetailActivityItem] =
+    useState<TypeDetailActivityEdited>({} as TypeDetailActivityEdited);
+  const detailActivityItemMemo = useMemo(
+    () => detailActivityItem,
+    [detailActivityItem],
+  );
+  const [isAddButtonClicked, setIsAddButtonClicked] = useState<boolean>(false);
+  const [isEditButtonClicked, setIsEditButtonClicked] =
     useState<boolean>(false);
-  const [isEditButtonClick, setIsEditButtonClick] = useState<boolean>(false);
-  const [deleteDetailActivityItem, setDeleteDetailActivityItem] = useState<{
-    id: number;
-    title: string;
-  }>({});
-  const [editDetailActivityItem, setEditDetailActivityItem] = useState<{
-    id: number;
-    title: string;
-    priority: string;
-  }>({});
-  const getDeleteDetailActivityItem = (data: { id: number; title: string }) => {
+  const [isDeleteButtonClicked, setIsDeleteButtonClicked] =
+    useState<boolean>(false);
+  const sortedItemHandler = useCallback((select: TypeSorted) => {
+    setSortedType(() => select);
+  }, []);
+  const addDetailActivityHandler = useCallback(() => {
     setModalOn();
-    setModalChangeChildrenElementOff();
-    setDeleteDetailActivityItem((prev) => ({ ...prev, ...data }));
-    setIsDeleteButtonClick(true);
-  };
-  const onHandlerDeleteDetailActivity = async () => {
-    await deleteDetailActivity(deleteDetailActivityItem.id);
-    setModalChangeChildrenElementOn();
-  };
-  const onHandlerCloseEdit = () => {
+    setIsAddButtonClicked((prev) => !prev);
+  }, [setModalOn]);
+  const editDetailActivityHandler = useCallback(
+    (data: TypeDetailActivityEdited) => {
+      setDetailActivityItem((prev) => ({ ...prev, ...data }));
+      setModalOn();
+      setIsEditButtonClicked((prev) => !prev);
+    },
+    [setModalOn],
+  );
+  const deleteDetailActivityHandler = useCallback(
+    (data: TypeDetailActivityEdited) => {
+      setModalChangeChildrenElementOff();
+      setDetailActivityItem((prev) => ({ ...prev, ...data }));
+      setModalOn();
+      setIsDeleteButtonClicked((prev) => !prev);
+    },
+    [setModalOn, setModalChangeChildrenElementOff],
+  );
+  const delteDetailActvityConfirmHandler = useCallback(async () => {
+    if (!isModalChangeChildrenElement) {
+      await deleteDetailActivity(detailActivityItemMemo.id);
+      setModalChangeChildrenElementOn();
+    }
+  }, [
+    setModalChangeChildrenElementOn,
+    deleteDetailActivity,
+    detailActivityItemMemo.id,
+    isModalChangeChildrenElement,
+  ]);
+  const modalOffHandler = useCallback(() => {
+    if (isAddButtonClicked) setIsAddButtonClicked((prev) => !prev);
+    if (isEditButtonClicked) setIsEditButtonClicked((prev) => !prev);
+    if (isDeleteButtonClicked) {
+      setIsDeleteButtonClicked((prev) => !prev);
+      setModalChangeChildrenElementOff();
+    }
     setModalOff();
-    setIsEditButtonClick(!isEditButtonClick);
-  };
-  const onHandlerCloseAdd = () => {
-    setModalOff();
-    setIsAddButtonClick(!isAddButtonClick);
-  };
-  const onHandlerAddButton = () => {
-    setModalOn();
-    setIsAddButtonClick(true);
-  };
-  const getEditDetailActivity = (data: {
-    id: number;
-    title: string;
-    priority: string;
-  }) => {
-    setModalOn();
-    setIsEditButtonClick(true);
-    setEditDetailActivityItem((prev) => ({ ...prev, ...data }));
-  };
-  const onHandlerModalOff = () => {
-    setModalOff();
-    setIsAddButtonClick(false);
-    setIsDeleteButtonClick(false);
-  };
+  }, [
+    setModalOff,
+    setModalChangeChildrenElementOff,
+    isAddButtonClicked,
+    isEditButtonClicked,
+    isDeleteButtonClicked,
+  ]);
   return (
     <>
       {isModalVisible && (
-        <Modal onModalOff={onHandlerModalOff}>
-          {isDeleteButtonClick && !isModalChangeChildrenElement ? (
-            <ConfirmAlert
-              fromItem="item"
-              itemTitle={deleteDetailActivityItem.title}
-              onBack={setModalOff}
-              onConfirm={onHandlerDeleteDetailActivity}
-            />
-          ) : (
-            <InformAlert fromItem="item" />
-          )}
-          {isEditButtonClick && (
+        <Modal onModalOff={modalOffHandler}>
+          {isAddButtonClicked && (
             <FormDetailActivity
-              onHandlerClose={onHandlerCloseEdit}
-              formTitle="Edit List Item"
-              formType="edit"
-            />
-          )}
-          {isAddButtonClick && (
-            <FormDetailActivity
-              onHandlerClose={onHandlerCloseAdd}
+              activityGroupId={selectedActivityMemo.id}
+              closeHandler={modalOffHandler}
               formTitle="Tambah List Item"
               formType="add"
             />
           )}
+          {isEditButtonClicked && (
+            <FormDetailActivity
+              closeHandler={modalOffHandler}
+              formTitle="Edit List Item"
+              formType="edit"
+              edited={detailActivityItemMemo}
+            />
+          )}
+          {isDeleteButtonClicked &&
+            (!isModalChangeChildrenElement ? (
+              <ConfirmAlert
+                fromItem="item"
+                itemTitle={detailActivityItemMemo.title}
+                onBack={modalOffHandler}
+                onConfirm={delteDetailActvityConfirmHandler}
+              />
+            ) : (
+              <InformAlert fromItem="item" />
+            ))}
         </Modal>
       )}
-      <HeaderDetailActivity onHandlerAddButton={onHandlerAddButton} />
+      <HeaderDetailActivity
+        sortedType={sortedType}
+        sortedItemHandler={sortedItemHandler}
+        data={selectedActivityMemo}
+        addDetailActivityItem={addDetailActivityHandler}
+        patchActivity={patchActivity}
+      />
       <DetailActivitys>
-        {detailActivitys.length === 0 ? (
-          <EmptyDetailActivity />
+        {detailActivitysMemo.length === 0 ? (
+          <EmptyDetailActivity onClick={addDetailActivityHandler} />
         ) : (
-          detailActivitys.map(
-            ({ activity_group_id, id, is_active, priority, title }) => (
-              <DetailActivityItem
-                onEditDetailActivityItem={getEditDetailActivity}
-                onDeleteDetailActivityItem={getDeleteDetailActivityItem}
-                key={id}
-                id={id}
-                title={title}
-                priority={priority}
-                activity_group_id={activity_group_id}
-                is_active={is_active}
-              />
-            ),
-          )
+          detailActivitysMemo.map(({ id, is_active, priority, title }) => (
+            <DetailActivityItem
+              patchDetailActivityHandler={patchDetailActivity}
+              editDetailActivityHandler={editDetailActivityHandler}
+              deleteDetailActivityHandler={deleteDetailActivityHandler}
+              key={id}
+              id={id}
+              is_active={is_active}
+              priority={priority}
+              title={title}
+            />
+          ))
         )}
       </DetailActivitys>
     </>
   );
 };
 
-export default DetailActivity;
+export default memo(DetailActivity);

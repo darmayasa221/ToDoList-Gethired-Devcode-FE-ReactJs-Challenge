@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React from "react";
+import React, { memo } from "react";
 import { ReactComponent as PlusSvg } from "../../assets/svg/tabler_plus.svg";
 import { button } from "../../globalStyle/button";
 import { fontStyle } from "../../globalStyle/fonts";
@@ -53,4 +53,4 @@ const AddButton: React.FC<TypeAddButton> = ({ dataCy, onClick }) => {
   );
 };
 
-export default AddButton;
+export default memo(AddButton);

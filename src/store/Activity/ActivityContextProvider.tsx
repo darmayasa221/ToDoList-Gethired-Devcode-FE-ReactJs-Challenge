@@ -1,50 +1,36 @@
-import React, { FC, ReactNode, useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, {
+  FC,
+  ReactNode,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  memo,
+} from "react";
+
 import {
-  TypeActivity,
-  TypeActivityResponseAPI,
+  TypeActivityContext,
   TypeActivitys,
   TypeActivitysResponseAPI,
 } from "../../types/Activitys/activitysType";
 import ActivtyContext from "./activityContext";
 
 const ActivityContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const params = useParams();
   const [activitys, setActivits] = useState<TypeActivitys>([]);
-  const [activity, setActivity] = useState<TypeActivity>({} as TypeActivity);
   const [isPost, setIsPost] = useState<boolean>(false);
   const [isDelete, setIsDelete] = useState<boolean>(false);
-  const [isUpdate, setIsUpdate] = useState<boolean>(false);
-  const [isActivityNeeded, setIsActivityNeeded] = useState<boolean>(false);
+  const getActivitys = useCallback(async () => {
+    const response = await fetch(
+      "https://todo.api.devcode.gethired.id/activity-groups/?email=test@email.com",
+    );
+    const responseJson: TypeActivitysResponseAPI = await response.json();
+    setActivits(() => responseJson.data);
+  }, []);
   useEffect(() => {
-    setIsActivityNeeded(Object.keys(params)[0] === "id");
-  }, [params]);
-  useEffect(() => {
-    const getActivity = async () => {
-      const response = await fetch(
-        `https://todo.api.devcode.gethired.id/activity-groups/${params.id}`,
-      );
-      const { created_at, id, title }: TypeActivityResponseAPI =
-        await response.json();
-      setActivity((prev) => ({ ...prev, created_at, id, title }));
-    };
-    if (isActivityNeeded) getActivity();
-    return () => {
-      setIsActivityNeeded(false);
-    };
-  }, [isActivityNeeded, params.id]);
-  useEffect(() => {
-    const getActivitys = async () => {
-      const response = await fetch(
-        "https://todo.api.devcode.gethired.id/activity-groups/?email=test@email.com",
-      );
-      const responseJson: TypeActivitysResponseAPI = await response.json();
-      setActivits(responseJson.data);
-    };
-    getActivitys();
-    return () => setIsUpdate(false);
-  }, [isPost, isDelete, isUpdate]);
-  const addActivity = async () => {
+    (async () => getActivitys())();
+  }, [getActivitys, isPost, isDelete]);
+
+  const addActivity = useCallback(async () => {
     await fetch("https://todo.api.devcode.gethired.id/activity-groups", {
       method: "POST",
       headers: {
@@ -55,48 +41,28 @@ const ActivityContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
         email: "test@email.com",
       }),
     });
-    setIsPost(!isPost);
-  };
-  const deleteActivity = async (id: number) => {
+    setIsPost((prev) => !prev);
+  }, []);
+  const deleteActivity = useCallback(async (id: number) => {
     await fetch(`https://todo.api.devcode.gethired.id/activity-groups/${id}`, {
       method: "DELETE",
     });
-    setIsDelete(!isDelete);
-  };
-  const updateActivity = async ({
-    title,
-    activityId,
-  }: {
-    title: string;
-    activityId: number;
-  }) => {
-    await fetch(
-      `https://todo.api.devcode.gethired.id/activity-groups/${activityId}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-        }),
-      },
-    );
-    setIsUpdate(true);
-  };
+    setIsDelete((prev) => !prev);
+  }, []);
+  const activitysMemo = useMemo(() => activitys, [activitys]);
+  const activityContextValue: TypeActivityContext = useMemo(
+    () => ({
+      activitys: activitysMemo,
+      addActivity,
+      deleteActivity,
+    }),
+    [activitysMemo, addActivity, deleteActivity],
+  );
   return (
-    <ActivtyContext.Provider
-      value={{
-        activity,
-        activitys,
-        addActivity,
-        deleteActivity,
-        updateActivity,
-      }}
-    >
+    <ActivtyContext.Provider value={activityContextValue}>
       {children}
     </ActivtyContext.Provider>
   );
 };
 
-export default ActivityContextProvider;
+export default memo(ActivityContextProvider);

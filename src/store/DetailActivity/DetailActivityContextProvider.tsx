@@ -1,8 +1,22 @@
-import React, { FC, ReactNode, useEffect, useState } from "react";
+import React, {
+  FC,
+  memo,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useParams } from "react-router-dom";
+import { TypePatchActivity } from "../../types/Activitys/activitysType";
 import {
+  TypeAddDetailActivityItem,
+  TypeDetailActivity,
+  TypeDetailActivityContext,
+  TypeDetailActivityEdited,
   TypeDetailActivityResponseAPI,
   TypeDetailActivitys,
+  TypePatchDetailActivity,
 } from "../../types/DetailActivity/detailActivityType";
 import DetailActivityContext from "./detailActivityContext";
 
@@ -15,95 +29,119 @@ const DetailActivityContextProvider: FC<{ children: ReactNode }> = ({
   );
   const [isDelete, setIsDelete] = useState<boolean>(false);
   const [isPost, setIsPost] = useState<boolean>(false);
-
+  const getDetailActivitys = useCallback(async () => {
+    const response = await fetch(
+      `https://todo.api.devcode.gethired.id/todo-items?activity_group_id=${id}`,
+    );
+    const responseJson: TypeDetailActivityResponseAPI = await response.json();
+    setDetailActivitys(() => responseJson.data);
+  }, [id]);
   useEffect(() => {
-    const getDetailActivitys = async () => {
-      const response = await fetch(
-        `https://todo.api.devcode.gethired.id/todo-items?activity_group_id=${id}`,
-      );
-      const responseJson: TypeDetailActivityResponseAPI = await response.json();
-      setDetailActivitys(responseJson.data);
-    };
-    getDetailActivitys();
-  }, [isPost, isDelete, id]);
-  const addDetailActivityDefaultValue = async () => {
-    await fetch("https://todo.api.devcode.gethired.id/todo-items", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    (async () => getDetailActivitys())();
+  }, [isPost, id, isDelete, getDetailActivitys]);
+  const patchActivity = useCallback(async (data: TypePatchActivity) => {
+    await fetch(
+      `https://todo.api.devcode.gethired.id/activity-groups/${data.id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: data.title,
+        }),
       },
-      body: JSON.stringify({
-        title: "activity",
-        activity_group_id: Number(id),
-        is_active: true,
-      }),
-    });
-    setIsPost(!isPost);
-  };
-  const addDetailActivity = async (data: {
-    priority: string;
-    title: string;
-  }) => {
-    const detailActivity: {
-      activity_group_id: number;
-      is_active: boolean;
-      priority: string;
-      title: string;
-    } = {
-      ...data,
-      activity_group_id: Number(id),
-      is_active: true,
-    };
-    await fetch("https://todo.api.devcode.gethired.id/todo-items", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(detailActivity),
-    });
-    setIsPost(!isPost);
-  };
-  const deleteDetailActivity = async (idDetailActivity: number) => {
+    );
+  }, []);
+  const addDetailActivity = useCallback(
+    async (data: TypeAddDetailActivityItem) => {
+      const detailActivity: Omit<TypeDetailActivity, "id"> = {
+        activity_group_id: data.activity_group_id,
+        priority: data.priority ? data.priority : "very-high",
+        title: data.title,
+        is_active: 0,
+      };
+      await fetch("https://todo.api.devcode.gethired.id/todo-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(detailActivity),
+      });
+      setIsPost((prev) => !prev);
+    },
+    [],
+  );
+  const deleteDetailActivity = useCallback(async (idDetailActivity: number) => {
     await fetch(
       `https://todo.api.devcode.gethired.id/todo-items/${idDetailActivity}`,
       {
         method: "DELETE",
       },
     );
-    setIsDelete(!isDelete);
-  };
-  const editDetailActivity = async (
-    data: {
-      priority: string;
-      title: string;
-    },
-    idDetailActivity: number,
-  ) => {
-    await fetch(
-      `https://todo.api.devcode.gethired.id/todo-items/${idDetailActivity}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+    setIsDelete((prev) => !prev);
+  }, []);
+  const editDetailActivity = useCallback(
+    async (data: TypeDetailActivityEdited) => {
+      const editedData: Omit<TypeDetailActivityEdited, "id"> = {
+        priority: data.priority,
+        title: data.title,
+      };
+      await fetch(
+        `https://todo.api.devcode.gethired.id/todo-items/${data.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editedData),
         },
-        body: JSON.stringify({ ...data }),
-      },
-    );
-    setIsPost(!isPost);
-  };
+      );
+      setIsPost((prev) => !prev);
+    },
+    [],
+  );
+  const patchDetailActivity = useCallback(
+    async (data: TypePatchDetailActivity) => {
+      await fetch(
+        `https://todo.api.devcode.gethired.id/todo-items/${data.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            is_active: data.isActive,
+          }),
+        },
+      );
+    },
+    [],
+  );
+  const detailActivitysMemo = useMemo(() => detailActivitys, [detailActivitys]);
+  const detailActivityContextValue: TypeDetailActivityContext = useMemo(
+    () => ({
+      detailActivitys: detailActivitysMemo,
+      patchActivity,
+      addDetailActivity,
+      editDetailActivity,
+      deleteDetailActivity,
+      patchDetailActivity,
+    }),
+    [
+      detailActivitysMemo,
+      addDetailActivity,
+      patchActivity,
+      editDetailActivity,
+      deleteDetailActivity,
+      patchDetailActivity,
+    ],
+  );
   return (
-    <DetailActivityContext.Provider
-      value={{
-        detailActivitys,
-        addDetailActivityDefaultValue,
-        addDetailActivity,
-        deleteDetailActivity,
-        editDetailActivity,
-      }}
-    >
+    <DetailActivityContext.Provider value={detailActivityContextValue}>
       {children}
     </DetailActivityContext.Provider>
   );
 };
 
-export default DetailActivityContextProvider;
+export default memo(DetailActivityContextProvider);

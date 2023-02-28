@@ -1,20 +1,28 @@
 import styled from "@emotion/styled";
-import React, { FC } from "react";
+import React, {
+  ChangeEvent,
+  FC,
+  memo,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { card } from "../../../../../globalStyle/card";
 import { ReactComponent as EditButtonSvg } from "../../../../../assets/svg/todo-title-edit-button.svg";
 import { ReactComponent as TrashSvg } from "../../../../../assets/svg/tabler_trash.svg";
 import { fontStyle } from "../../../../../globalStyle/fonts";
 import { mq } from "../../../../../globalStyle/responsive";
-import { TypeDetailActivity } from "../../../../../types/DetailActivity/detailActivityType";
+import {
+  TypeDetailActivity,
+  TypeDetailActivityEdited,
+  TypePatchDetailActivity,
+} from "../../../../../types/DetailActivity/detailActivityType";
 import colorPriority from "../../../../../commons/colorPriority";
 
-type TypeDetailActivityItem = TypeDetailActivity & {
-  onDeleteDetailActivityItem: (data: { id: number; title: string }) => void;
-  onEditDetailActivityItem: (data: {
-    id: number;
-    title: string;
-    priority: string;
-  }) => void;
+type TypeDetailActivityItem = Omit<TypeDetailActivity, "activity_group_id"> & {
+  patchDetailActivityHandler: (data: TypePatchDetailActivity) => Promise<void>;
+  deleteDetailActivityHandler: (data: TypeDetailActivityEdited) => void;
+  editDetailActivityHandler: (data: TypeDetailActivityEdited) => void;
 };
 
 const Wrapper = styled.div(card, {
@@ -59,13 +67,15 @@ const Indicator = styled.span<{ color: string }>(({ color }) => ({
     height: "9px",
   },
 }));
-const Title = styled.p(fontStyle, {
+const Title = styled.p<{ isActive: boolean }>(fontStyle, ({ isActive }) => ({
   fontWeight: 500,
   fontSize: "14px",
   [mq[2] as string]: {
     fontSize: "18px",
   },
-});
+  color: isActive ? "#888888" : "#111111",
+  textDecoration: isActive ? "line-through" : "none",
+}));
 const WrapperRightSide = styled.div({
   display: "flex",
   alignItems: "center",
@@ -81,26 +91,43 @@ const EditButton = styled.button({
   cursor: "pointer",
 });
 const DetailActivityItem: FC<TypeDetailActivityItem> = ({
-  activity_group_id,
   id,
   is_active,
   priority,
   title,
-  onDeleteDetailActivityItem,
-  onEditDetailActivityItem,
+  deleteDetailActivityHandler,
+  editDetailActivityHandler,
+  patchDetailActivityHandler,
 }) => {
-  const color = colorPriority(priority);
+  const [isActive, setIsActive] = useState<boolean>(Boolean(is_active));
+  const colorMemo = useMemo(() => {
+    return colorPriority(priority);
+  }, [priority]);
+  const onChangeIsActivie = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const active = event.target.checked;
+      setIsActive(() => active);
+      await patchDetailActivityHandler({ id, isActive: active });
+    },
+    [patchDetailActivityHandler, id],
+  );
   return (
-    <Wrapper>
+    <Wrapper data-cy="todo-item">
       <WrapperLeftSide>
-        <CheckBoxInput type="checkbox" />
-        <Indicator color={color} />
-        <Title>{title}</Title>
+        <CheckBoxInput
+          data-cy="todo-item-checkbox"
+          type="checkbox"
+          checked={isActive}
+          onChange={onChangeIsActivie}
+        />
+        <Indicator data-cy="todo-item-priority-indicator" color={colorMemo} />
+        <Title data-cy="todo-item-title" isActive={isActive}>
+          {title}
+        </Title>
         <EditButton
+          data-cy="todo-item-edit-button"
           type="button"
-          onClick={() =>
-            onEditDetailActivityItem({ id: Number(id), title, priority })
-          }
+          onClick={() => editDetailActivityHandler({ id, title, priority })}
         >
           <EditButtonSvg
             css={{
@@ -117,7 +144,9 @@ const DetailActivityItem: FC<TypeDetailActivityItem> = ({
       </WrapperLeftSide>
       <WrapperRightSide>
         <RemoveButton
-          onClick={() => onDeleteDetailActivityItem({ id: Number(id), title })}
+          data-cy="todo-item-delete-button"
+          type="button"
+          onClick={() => deleteDetailActivityHandler({ id, title, priority })}
         >
           <TrashSvg
             css={{
@@ -136,4 +165,4 @@ const DetailActivityItem: FC<TypeDetailActivityItem> = ({
   );
 };
 
-export default DetailActivityItem;
+export default memo(DetailActivityItem);

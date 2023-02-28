@@ -1,14 +1,15 @@
 import styled from "@emotion/styled";
-import React, { useContext, useState } from "react";
+import React, { memo, useCallback, useContext, useMemo, useState } from "react";
 import ConfirmAlert from "../../components/Alert/ConfirmAlert";
 import InformAlert from "../../components/Alert/InformAlert";
 import HeaderActivity from "../../components/Main/Dashboard/Header/HeaderActivity";
 import ActivityItem from "../../components/Main/Dashboard/Main/Activity/ActivityItem";
-import { EmptyActivity } from "../../components/Main/Dashboard/Main/Activity/EmptyActivity";
+import EmptyActivity from "../../components/Main/Dashboard/Main/Activity/EmptyActivity";
 import Modal from "../../components/Modal/Modal";
 import { mq } from "../../globalStyle/responsive";
 import ActivityContext from "../../store/Activity/activityContext";
 import ModalContext from "../../store/Modal/modalContext";
+import { TypeSelectActivityItem } from "../../types/Activitys/activitysType";
 
 const Activitys = styled.div({
   display: "grid",
@@ -35,27 +36,33 @@ const Activitys = styled.div({
 });
 
 const Activity = () => {
-  const { activitys } = useContext(ActivityContext);
-  const { deleteActivity } = useContext(ActivityContext);
-  const [deleteActivityItem, setDeleteActivityItem] = useState<{
-    id: number;
-    title: string;
-  }>({});
+  const { activitys, addActivity, deleteActivity } =
+    useContext(ActivityContext);
+  const activitysMemo = useMemo(() => {
+    return activitys;
+  }, [activitys]);
+  const [selectActivityItem, setSelectActivityItem] =
+    useState<TypeSelectActivityItem>({} as TypeSelectActivityItem);
   const {
+    setModalOn,
     setModalOff,
     setModalChangeChildrenElementOff,
     setModalChangeChildrenElementOn,
     isModalChangeChildrenElement,
     isModalVisible,
   } = useContext(ModalContext);
-  const getDeleteActivityItem = (id: number, title: string) => {
-    setDeleteActivityItem((prev) => ({ ...prev, id, title }));
-    setModalChangeChildrenElementOff();
-  };
-  const onHandlerDeleteActivity = async () => {
-    await deleteActivity(deleteActivityItem.id);
+  const selectActivityWillDelete = useCallback(
+    (data: TypeSelectActivityItem) => {
+      setModalOn();
+      setSelectActivityItem((prev) => ({ ...prev, ...data }));
+      setModalChangeChildrenElementOff();
+    },
+    [setModalOn, setModalChangeChildrenElementOff],
+  );
+  const handlerDeleteActivity = useCallback(async () => {
+    await deleteActivity(selectActivityItem.id);
     setModalChangeChildrenElementOn();
-  };
+  }, [setModalChangeChildrenElementOn, selectActivityItem.id, deleteActivity]);
   return (
     <>
       {isModalVisible && (
@@ -63,27 +70,27 @@ const Activity = () => {
           {!isModalChangeChildrenElement ? (
             <ConfirmAlert
               fromItem="Activity"
-              itemTitle={deleteActivityItem.title}
+              itemTitle={selectActivityItem.title}
               onBack={setModalOff}
-              onConfirm={onHandlerDeleteActivity}
+              onConfirm={handlerDeleteActivity}
             />
           ) : (
             <InformAlert fromItem="Activity" />
           )}
         </Modal>
       )}
-      <HeaderActivity />
-      {activitys.length === 0 ? (
-        <EmptyActivity />
+      <HeaderActivity onClick={addActivity} />
+      {activitysMemo.length === 0 ? (
+        <EmptyActivity onClick={addActivity} />
       ) : (
         <Activitys>
-          {activitys.map(({ id, created_at, title }) => (
+          {activitysMemo.map(({ id, created_at, title }) => (
             <ActivityItem
               key={id}
               id={id}
               created_at={created_at}
               title={title}
-              onDeleteActivityItem={getDeleteActivityItem}
+              onClick={selectActivityWillDelete}
             />
           ))}
         </Activitys>
@@ -92,4 +99,4 @@ const Activity = () => {
   );
 };
 
-export default Activity;
+export default memo(Activity);

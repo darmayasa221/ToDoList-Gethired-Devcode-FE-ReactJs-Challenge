@@ -23,7 +23,7 @@ const Main = () => {
   const params = useParams();
   const [param, setParam] = useState<boolean>(false);
   useEffect(() => {
-    setParam(Object.keys(params)[0] === "id");
+    setParam(() => Object.keys(params)[0] === "id");
   }, [params]);
   return (
     <Container param={param}>

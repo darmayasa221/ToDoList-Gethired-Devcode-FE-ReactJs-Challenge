@@ -1,8 +1,7 @@
 import styled from "@emotion/styled";
-import React, { useContext, memo } from "react";
+import React, { FC, memo } from "react";
 import { fontStyle } from "../../../../globalStyle/fonts";
 import { mq } from "../../../../globalStyle/responsive";
-import ActivityContext from "../../../../store/Activity/activityContext";
 import AddButton from "../../../UI/AddButton";
 
 const Container = styled.div({
@@ -18,12 +17,11 @@ const Title = styled.h2(fontStyle, {
     fontSize: "36px",
   },
 });
-const HeaderActivity = () => {
-  const { addActivity } = useContext(ActivityContext);
+const HeaderActivity: FC<{ onClick: () => Promise<void> }> = ({ onClick }) => {
   return (
     <Container>
       <Title data-cy="activity-title">Activity</Title>
-      <AddButton dataCy="activity-add-button" onClick={addActivity} />
+      <AddButton dataCy="activity-add-button" onClick={onClick} />
     </Container>
   );
 };

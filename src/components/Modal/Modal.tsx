@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React, { FC } from "react";
+import React, { FC, memo } from "react";
 import { createPortal } from "react-dom";
 
 type TypeBackdrop = {
@@ -42,4 +42,4 @@ const Modal: React.FC<TypeModal> = ({ children, onModalOff }) => {
   );
 };
 
-export default Modal;
+export default memo(Modal);

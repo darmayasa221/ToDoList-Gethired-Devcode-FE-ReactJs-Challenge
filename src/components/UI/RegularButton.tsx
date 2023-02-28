@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React, { FC } from "react";
+import React, { FC, memo } from "react";
 import { button } from "../../globalStyle/button";
 import { fontStyle } from "../../globalStyle/fonts";
 import { mq } from "../../globalStyle/responsive";
@@ -11,6 +11,7 @@ type TypeRegularButton = {
   text: string;
   disabled?: boolean;
   type: "button" | "submit" | "reset";
+  dataCy: string;
 };
 
 const Button = styled.button<Pick<TypeRegularButton, "backgroundColor">>(
@@ -51,9 +52,11 @@ const RegularButton: FC<TypeRegularButton> = ({
   onClick,
   disabled,
   type,
+  dataCy,
 }) => {
   return (
     <Button
+      data-cy={dataCy}
       disabled={disabled}
       backgroundColor={backgroundColor}
       onClick={onClick}
@@ -64,4 +67,4 @@ const RegularButton: FC<TypeRegularButton> = ({
   );
 };
 
-export default RegularButton;
+export default memo(RegularButton);
