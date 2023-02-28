@@ -59,7 +59,7 @@ const DetailActivityContextProvider: FC<{ children: ReactNode }> = ({
         activity_group_id: data.activity_group_id,
         priority: data.priority ? data.priority : "very-high",
         title: data.title,
-        is_active: 0,
+        is_active: 1,
       };
       await fetch("https://todo.api.devcode.gethired.id/todo-items", {
         method: "POST",
