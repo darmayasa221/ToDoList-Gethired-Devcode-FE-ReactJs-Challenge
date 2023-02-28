@@ -64,27 +64,22 @@ const dataSVG = [
   {
     elemet: <LatestSvg />,
     title: "Terbaru",
-    type: "latest",
   },
   {
     elemet: <OldestSvg />,
     title: "Terlama",
-    type: "oldest",
   },
   {
     elemet: <AzSvg />,
     title: "A-Z",
-    type: "az",
   },
   {
     elemet: <ZaSvg />,
     title: "Z-A",
-    type: "za",
   },
   {
     elemet: <NotFinishedSvg />,
     title: "Belum Selesai",
-    type: "unfinished",
   },
 ];
 const Sort: FC<TypeSort> = ({
@@ -101,10 +96,10 @@ const Sort: FC<TypeSort> = ({
   );
   return (
     <ContainerSort data-cy="sort-parent">
-      {dataSVG.map(({ elemet, title, type }, index) =>
+      {dataSVG.map(({ elemet, title }, index) =>
         index === dataSVG.length - 1 ? (
           <WrapperItem
-            data-cy={`sort-${type}`}
+            data-cy="sort-selection"
             onClick={() => selectSortedHandler(title as TypeSorted)}
             style={{ border: "none" }}
             key={title}
@@ -128,7 +123,7 @@ const Sort: FC<TypeSort> = ({
           </WrapperItem>
         ) : (
           <WrapperItem
-            data-cy={`sort-${type}`}
+            data-cy="sort-selection"
             onClick={() => selectSortedHandler(title as TypeSorted)}
             key={title}
           >

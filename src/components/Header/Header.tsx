@@ -30,8 +30,8 @@ const TextHeader = styled.h1(fontStyle, {
 
 const Header = () => {
   return (
-    <Container data-cy="header-background">
-      <Wrapper>
+    <Container>
+      <Wrapper data-cy="header-background">
         <TextHeader data-cy="header-title">Todo List App</TextHeader>
       </Wrapper>
     </Container>
