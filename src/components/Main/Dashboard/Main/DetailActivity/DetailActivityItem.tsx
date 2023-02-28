@@ -99,7 +99,7 @@ const DetailActivityItem: FC<TypeDetailActivityItem> = ({
   editDetailActivityHandler,
   patchDetailActivityHandler,
 }) => {
-  const [isActive, setIsActive] = useState<boolean>(Boolean(is_active));
+  const [isActive, setIsActive] = useState<boolean>(Boolean(!is_active));
   const colorMemo = useMemo(() => {
     return colorPriority(priority);
   }, [priority]);
@@ -107,7 +107,7 @@ const DetailActivityItem: FC<TypeDetailActivityItem> = ({
     async (event: ChangeEvent<HTMLInputElement>) => {
       const active = event.target.checked;
       setIsActive(() => active);
-      await patchDetailActivityHandler({ id, isActive: active });
+      await patchDetailActivityHandler({ id, isActive: !active });
     },
     [patchDetailActivityHandler, id],
   );

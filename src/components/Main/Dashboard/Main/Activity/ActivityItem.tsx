@@ -69,13 +69,9 @@ const ActivityItem: FC<TypeActivityItem> = ({
     [id, title],
   );
   return (
-    <CardActivity data-cy="activity-item">
-      <Header
-        data-cy="activity-item-title"
-        to={`detail/${id}`}
-        state={activity}
-      >
-        {title}
+    <CardActivity>
+      <Header data-cy="activity-item" to={`detail/${id}`} state={activity}>
+        <p data-cy="activity-item-title"> {title}</p>
       </Header>
       <Body>
         <DateDescription data-cy="activity-item-date">{dateID}</DateDescription>

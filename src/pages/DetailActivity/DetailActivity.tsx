@@ -40,7 +40,6 @@ const DetailActivity = () => {
 
   const [sortedType, setSortedType] = useState<TypeSorted>("Terbaru");
   const detailActivitysMemo = useMemo(() => {
-    console.log("detail activity memo value");
     return sorter(detailActivitys, sortedType);
   }, [detailActivitys, sortedType]);
   const {
