@@ -115,6 +115,7 @@ const DetailActivityContextProvider: FC<{ children: ReactNode }> = ({
           }),
         },
       );
+      setIsPost((prev) => !prev);
     },
     [],
   );
