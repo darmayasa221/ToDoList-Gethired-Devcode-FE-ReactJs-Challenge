@@ -32,7 +32,7 @@ const Header = () => {
   return (
     <Container>
       <Wrapper data-cy="header-background">
-        <TextHeader data-cy="header-title">Todo List App</TextHeader>
+        <TextHeader data-cy="header-title">TO DO LIST APP</TextHeader>
       </Wrapper>
     </Container>
   );
