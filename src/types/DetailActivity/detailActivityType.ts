@@ -15,7 +15,7 @@ export type TypeDetailActivityEdited = {
 };
 export type TypeDetailActivitys = Array<TypeDetailActivity>;
 export type TypeDetailActivityResponseAPI = {
-  data: TypeDetailActivitys;
+  todo_items: TypeDetailActivitys;
 };
 // detail activity form
 export type TypeAddDetailActivityItem = {

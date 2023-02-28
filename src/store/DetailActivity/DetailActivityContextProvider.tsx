@@ -31,10 +31,10 @@ const DetailActivityContextProvider: FC<{ children: ReactNode }> = ({
   const [isPost, setIsPost] = useState<boolean>(false);
   const getDetailActivitys = useCallback(async () => {
     const response = await fetch(
-      `https://todo.api.devcode.gethired.id/todo-items?activity_group_id=${id}`,
+      `https://todo.api.devcode.gethired.id/activity-groups/${id}`,
     );
     const responseJson: TypeDetailActivityResponseAPI = await response.json();
-    setDetailActivitys(() => responseJson.data);
+    setDetailActivitys(() => responseJson.todo_items);
   }, [id]);
   useEffect(() => {
     (async () => getDetailActivitys())();
